@@ -6,7 +6,7 @@ class ARPcache:
     def __init__(self):
         pass
     def readCache(self):
-
+        pass
 
     def delCache(self):
         pass
