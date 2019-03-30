@@ -1,8 +1,9 @@
 class Node:
 
-    def __init__(self, ip, mac, r_type):
+    def __init__(self, ip, mac, r_type, timeout):
         self.ip = ip
         self.mac = mac
+        self.timeout = timeout
         self.r_type = r_type
         self.next = None
 
@@ -13,9 +14,9 @@ class linkList:
         self.head = None
         self.items = 0
 
-    def append(self, ip, mac, r_type):
+    def append(self, ip, mac, r_type, timeout):
 
-        new_node = Node(ip, mac, r_type)
+        new_node = Node(ip, mac, r_type, timeout)
 
         if self.head is None:
             self.head = new_node
@@ -39,7 +40,7 @@ class linkList:
         if prev is not None:
             prev.next = None
 
-        return node.ip, node.mac, node.r_type
+        return node.ip, node.mac, node.r_type, node.timeout
 
     def length(self):
         return self.items
@@ -50,7 +51,7 @@ class linkList:
         # print("|%s\t|%s\t|%s|" % ("address".center(15), "mac".center(17), "type".center(10)))
         # print("%s%s%s" % ("-" * 17, "-" * 17, "-" * 17))
         while ptr:
-            print("|%s\t|%s\t|%s|" % (ptr.ip.center(15), ptr.mac.center(17), ptr.r_type.center(10)))
+            print("|%s\t|%s\t|%s\t|%s|" % (ptr.ip.center(15), ptr.mac.center(17), ptr.r_type.center(10),str(ptr.timeout).center(15)))
             ptr = ptr.next
 
     def isEmpty(self):
@@ -60,8 +61,8 @@ class linkList:
 
 if __name__ == '__main__':
     llist = linkList()
-    llist.append("192.168.10.10", "aa:00:ff:aa:00:01", "static")
-    llist.append("192.168.10.101", "aa:00:ff:aa:00:11", "dynamic")
+    llist.append("192.168.10.10", "aa:00:ff:aa:00:01", "static",120)
+    llist.append("192.168.10.101", "aa:00:ff:aa:00:11", "dynamic",100)
     print(llist.length())
     llist.display()
     print(llist.pop("192.168.10.10", "aa:00:ff:aa:00:01"))
