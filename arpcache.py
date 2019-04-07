@@ -66,3 +66,10 @@ class ARP:
         if str(platform).lower() == 'Linux'.lower() or str(os.name).lower() == 'posix'.lower():
             for _dict in self.my_arp_cache_table:
                 self.ArpTable.append((_dict['IP address'], _dict['HW address'], _dict['Device']))
+    
+    def get_arp_cache_table(self):
+        # for entry in self.SarpTable:
+        #     pass
+        # for entry in self.DarpTable:
+        #     pass
+        return self.ArpTable

@@ -1,3 +1,15 @@
+arp probe is an arp request with the source ip all zeros (0.0.0.0) and hwsrc == NIC address of sender
+pdst == address being probed
+
+
+arp gratuitous /arp announcement is an arp request broadcast which has the target destination ip  === senders source ip and the
+destination hardware address === zeros
+OR
+is an reply broadcast with the  senders hardware address hwsrc === hwdst target hardware address and the senders ip
+psrc == pdst target ip adress
+
+
+
 kamene
 elevate
 ifaddr

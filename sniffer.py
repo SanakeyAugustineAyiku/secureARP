@@ -79,16 +79,18 @@ class Monitor:
         return iface_ips
 
     def sniff_arp_packet(self, pkt):
-        # check if packet is a request
-        sarp = SARP(pkt, self.ip, self.mac)
-        if pkt[ARP].op == 1 and (str(pkt[Ether].src) != self.mac or str(pkt[ARP].hwsrc) == self.mac):
+        # if I/O direction of packet is inbound
+        if (pkt[Ether].dst == "ff:ff:ff:ff:ff:ff") or str(pkt[Ether].dst) == self.mac:
             sarp = SARP(pkt, self.ip, self.mac)
-            sarp.inbound_arp_request()
-            # print(sarp.arp_cache.SARPtable())
+            # check if packet is a request
+            if pkt[ARP].op == 1:
+                sarp.inbound_arp_request()
+                print(sarp.arp_cache.SARPtable())
+                # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
+            elif pkt[ARP].op == 2:
+                sarp.inbound_arp_reply()
+                print(sarp.arp_cache.SARPtable())
             # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
-        else:
-            sarp.inbound_arp_reply()
-        # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
         
         
 # def test(pkt):
