@@ -101,7 +101,7 @@ class SARP:
         :param ip:
         :return:
         """
-        print("[*] removing Entry %s - %s"%(ip,))
+        print("[*] removing Entry %s"%(ip,))
 
 # a = rdpcap('C:\\Users\\Kasa\\Documents\\arp2.pcapng')
 # for p in a:
