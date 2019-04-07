@@ -57,9 +57,12 @@ class Monitor:
         self.ip = None
         if self.iface_ip_config:
             self.ip = self.iface_ip_config[0][0]
-        
+        self.welcome()
         self.start(self.iface)
 
+    def welcome(self):
+        print("Welcome to secureARP".center(80," "),"\nYour NIC name is %s with MAC address %s and IP address %s \n"
+            %(self.iface,self.mac,self.ip))
     def start(self, iface):
         
         sniff(iface=iface, prn=self.sniff_arp_packet, filter='arp', store=0)
@@ -78,12 +81,14 @@ class Monitor:
     def sniff_arp_packet(self, pkt):
         # check if packet is a request
         sarp = SARP(pkt, self.ip, self.mac)
-        if pkt[ARP].op == 1 and pkt[Ether].src != self.mac:
+        if pkt[ARP].op == 1 and (str(pkt[Ether].src) != self.mac or str(pkt[ARP].hwsrc) == self.mac):
             sarp = SARP(pkt, self.ip, self.mac)
             sarp.inbound_arp_request()
+            # print(sarp.arp_cache.SARPtable())
+            # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
         else:
             sarp.inbound_arp_reply()
-        return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
+        # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
         
         
 # def test(pkt):

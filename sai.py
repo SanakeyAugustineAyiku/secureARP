@@ -15,7 +15,7 @@ class SARP:
         self.my_mac = my_mac
         self.arp_cache = arp()
         self.static_arpcache = self.arp_cache.SARPtable()
-        print(self.static_arpcache)
+        # print(self.static_arpcache)
 
     def inbound_arp_request(self):
         """
@@ -26,14 +26,18 @@ class SARP:
 
         # op =1 srcip==dstip dstmac == broadcast
         if self.pkt[ARP].op == 1 and (str(self.pkt[ARP].psrc) == str(self.pkt[ARP].pdst)
-                                      and str(self.pkt[ARP].hwdst) is "ff:ff:ff:ff:ff:ff"):
+                                      and str(self.pkt[ARP].hwdst) == "ff:ff:ff:ff:ff:ff"):
             # now check if this packets source ip is in SARP cache
             if self.pkt[ARP].psrc in self.arp_cache.SARPtable():
                 # if yes refresh entry in table
                 self.refresh(self.pkt[ARP].psrc, self.pkt[Ether].src)
+                # for debuging
+                self.pkt.sprintf("Request: %ARP.psrc%  is announcing itself to %ARP.pdst%")
             else:
                 # if no (ie this is a this in not in static config file but is valid so add
                 self.allow(self.pkt[ARP].psrc, self.pkt[Ether].src)
+                # for debugging
+                self.pkt.sprintf("Request: %ARP.psrc%  is announcing itself to %ARP.pdst%")
         # check if request is a probe
         elif self.pkt[ARP].op is 1 and \
                 (str(self.pkt[ARP].psrc) is '0.0.0.0' and str(self.pkt[ARP].hwdst) is '00:00:00:00:00:00' and
@@ -41,6 +45,7 @@ class SARP:
             # send a probe reply to source / announce your self again
             sendp(Ether(src=self.my_mac, dst=self.pkt[Ether].src)/ARP(op=2, psrc=self.my_ip, hwsrc=self.my_mac,
                                                                         pdst=self.my_ip, hwdst="ff:ff:ff:ff:ff:ff"))
+            self.pkt.sprintf("Request: %Ether.src% ,%ARP.hwsrc% is probing %ARP.pdst%")
         # request is a normal arp request
         elif self.pkt[ARP].op == 1 and (self.pkt[Ether].src is self.pkt[ARP].hwsrc):
             # send appropriate reply
@@ -51,6 +56,7 @@ class SARP:
             for ip, mac in self.static_arpcache:
                 if str(self.pkt[ARP].psrc) == ip and str(self.pkt[ARP].hwsrc) == mac:
                     self.pkt.summary()
+        self.pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
 
     def inbound_arp_reply(self):
         """
