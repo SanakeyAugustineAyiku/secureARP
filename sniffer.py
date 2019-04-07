@@ -1,6 +1,9 @@
+#! /usr/bin/python3
 from kamene.all import *
-from arpcache import SARPtable
+from getmac import get_mac_address
+from sai import SARP
 import ifaddr
+
 
 
 # elevate.elevate()
@@ -28,20 +31,38 @@ import ifaddr
 #     for ip in adapter.ips:
 #         print("   %s/%s" % (ip.ip, ip.network_prefix))
 # _iface = "Broadcom BCM43142 802.11 bgn Wi-Fi M.2 Adapter"
+# _iface = 'eth0'
 # adapters = ifaddr.get_adapters()
 # iface_ips = []
 # for adapter in adapters:
 #     if str(adapter.nice_name) == _iface or str(adapter.name) == _iface:
 #         for ip in adapter.ips:
-#             if type(ip.ip) is tuple:
-#                 ip.ip = ip.ip[0]
-#             iface_ips.append(ip.ip)
+#             # if type(ip.ip) is tuple:
+#             #     ip.ip = ip.ip[0]
+#             #
+#             #     print(ip.ip)
+#             if ":" in str(ip.ip):
+#                 continue
+#             iface_ips.append((ip.ip, ip.network_prefix, _iface))
+#
 # print(iface_ips)
+#
 
 class Monitor:
-    def __init__(self, iface):
-        self.iface = iface
-        self.iface_ips = self.ip_from_iface(self.iface)
+    def __init__(self, interface):
+
+        self.iface = interface
+        self.iface_ip_config = self.ip_from_iface(self.iface)
+        self.mac = get_mac_address(interface)
+        self.ip = None
+        if self.iface_ip_config:
+            self.ip = self.iface_ip_config[0][0]
+        
+        self.start(self.iface)
+
+    def start(self, iface):
+        
+        sniff(iface=iface, prn=self.sniff_arp_packet, filter='arp', store=0)
 
     def ip_from_iface(self, iface):
         adapters = ifaddr.get_adapters()
@@ -49,39 +70,24 @@ class Monitor:
         for adapter in adapters:
             if str(adapter.nice_name) == iface or str(adapter.name) == iface:
                 for ip in adapter.ips:
-                    if type(ip.ip) is tuple:
-                        ip.ip = ip.ip[0]
-                    iface_ips.append(ip.ip)
+                    if ":" in str(ip.ip):
+                        continue
+                    iface_ips.append((ip.ip, ip.network_prefix, iface))
         return iface_ips
 
-    def SARP(self):
-        sniff(iface=self.iface, prn=self.sniff_arp_request, filter='arp', store=0)
-        pass
-
-    def is_in_SARPTABLE(self, table, value):
-        for tupl in table:
-            return value is tupl[0] or tupl[1]
-
-    def sniff_arp_request(self, pkt):
-        # check if packet is an arp request
-        if ARP in pkt and pkt[ARP].op is 1:
-            # check if the request from us
-            if pkt[ARP].psrc in self.iface_ips:
-                pass
-            # check if packet is for us (either unicast or broadcast
-            elif pkt[ARP].pdst in self.iface_ips or pkt[ARP].hwdst == 'ff:ff:ff:ff:ff:ff':
-
-                # check if it is a gratuitous request
-                if pkt[ARP].psrc == pkt[ARP].pdst:
-                    # add entry to table (either refresh or make new entry
-                    if self.is_in_SARPTABLE(SARPtable(),pkt[ARP].psrc):
-
-
-                    pass
-
-# if os.name == "nt":
-#     interfaces = get_windows_if_list()
-#     for i in interfaces:
-#         if i["name"] is self.iface or i['guid'] is self.iface:
-#             sniff(iface=iface, prn=p, filter="arp", store=0)
-#
+    def sniff_arp_packet(self, pkt):
+        # check if packet is a request
+        sarp = SARP(pkt, self.ip, self.mac)
+        if pkt[ARP].op == 1 and pkt[Ether].src != self.mac:
+            sarp = SARP(pkt, self.ip, self.mac)
+            sarp.inbound_arp_request()
+        else:
+            sarp.inbound_arp_reply()
+        return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
+        
+        
+# def test(pkt):
+#     if pkt[ARP].op == 1:
+#         return pkt.summary()
+# # pboamah1 4wvvop7
+# sniff(iface='usb0',prn=test, filter='arp')
