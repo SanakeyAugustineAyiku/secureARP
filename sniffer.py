@@ -2,6 +2,7 @@
 from kamene.all import *
 from getmac import get_mac_address
 from sai import SARP
+from dai import DARP
 import ifaddr
 
 
@@ -79,19 +80,29 @@ class Monitor:
         return iface_ips
 
     def sniff_arp_packet(self, pkt):
-        # if I/O direction of packet is inbound
-        if (pkt[Ether].dst == "ff:ff:ff:ff:ff:ff") or str(pkt[Ether].dst) == self.mac:
-            sarp = SARP(pkt, self.ip, self.mac)
-            # check if packet is a request
-            if pkt[ARP].op == 1:
-                sarp.inbound_arp_request()
-                print(sarp.arp_cache.SARPtable())
+        try:
+            sarp = SARP(pkt, self.ip, self.mac,self.iface)
+            darp = DARP(pkt,self.ip,self.mac,self.iface)
+            # if I/O direction of packet is inbound
+            if (pkt[Ether].dst == "ff:ff:ff:ff:ff:ff") or str(pkt[Ether].dst) == self.mac:
+               
+                # check if packet is a request
+                if pkt[ARP].op == 1:
+                    # sarp.inbound_arp_request()
+                    # print(sarp.arp_cache.SARPtable())
+                    darp.inbound_arp_request()
+                    # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
+                elif pkt[ARP].op == 2:
+                    # sarp.inbound_arp_reply()
+                    # print(sarp.arp_cache.SARPtable())
+                    darp.inbound_arp_reply()
                 # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
-            elif pkt[ARP].op == 2:
-                sarp.inbound_arp_reply()
-                print(sarp.arp_cache.SARPtable())
-            # return pkt.sprintf("Request: (%ARP.psrc% ,%ARP.hwsrc%) is asking about %ARP.pdst%")
-        
+        except KeyboardInterrupt:
+            print("[*] You press Ctrl + C\n")
+            print(sarp.arp_cache.SARPtable())
+        finally:
+            pass
+           
         
 # def test(pkt):
 #     if pkt[ARP].op == 1:

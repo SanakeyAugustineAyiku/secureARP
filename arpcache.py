@@ -65,7 +65,7 @@ class ARP:
         """
         if str(platform).lower() == 'Linux'.lower() or str(os.name).lower() == 'posix'.lower():
             for _dict in self.my_arp_cache_table:
-                self.ArpTable.append((_dict['IP address'], _dict['HW address'], _dict['Device']))
+                self.ArpTable.append((_dict['IP address'], _dict['HW type'], _dict['HW address'], _dict['Flags'], _dict['Mask'], _dict['Device']))
     
     def get_arp_cache_table(self):
         # for entry in self.SarpTable:
@@ -73,3 +73,12 @@ class ARP:
         # for entry in self.DarpTable:
         #     pass
         return self.ArpTable
+    
+    def test_debug(self):
+        for ip, hw_type, mac,flag, mask,device in self.ArpTable:
+            print(ip," ", hw_type," ", mac," ", flag," ", mask," ", device)
+
+# a =ARP()
+# a.format_arp_table()
+# print(a.test_debug())
+# # print(get_arp_table())

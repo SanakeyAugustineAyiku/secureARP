@@ -15,3 +15,9 @@ elevate
 ifaddr
 getmac
 
+
+linux arp flags 
+
+   {'incomplete': 0x0 ,'complete': 0x2 ,'permanent':0x04,'complete and manually set':0x6,'publish':0x08,
+   'has requested trailers':0x10,'don't answer this address':0x40}
+
